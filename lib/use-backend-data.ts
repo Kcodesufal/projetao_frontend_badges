@@ -119,17 +119,17 @@ export function useBackendData() {
           )
         : data.inscricoes
 
-    const myProjectNames = new Set(
+    const myProjectIds = new Set(
       ong
         ? data.projetos
-            .filter((projeto) => projeto.ong_nome === ong.razao_social)
-            .map((projeto) => projeto.nome)
-        : data.projetos.map((projeto) => projeto.nome),
+            .filter((projeto) => projeto.ong_id === ong.id)
+            .map((projeto) => projeto.id)
+        : data.projetos.map((projeto) => projeto.id),
     )
 
     const myAplicacoes =
       role === "ong"
-        ? data.aplicacoes.filter((aplicacao) => myProjectNames.has(aplicacao.projeto_nome))
+        ? data.aplicacoes.filter((aplicacao) => myProjectIds.has(aplicacao.projeto_id))
         : role === "professor"
           ? data.aplicacoes.filter((aplicacao) =>
               data.minhasTurmas.some((turma) => turma.nome === aplicacao.turma_nome),
@@ -138,7 +138,7 @@ export function useBackendData() {
 
     const myProjetos =
       role === "ong"
-        ? data.projetos.filter((projeto) => projeto.ong_nome === ong?.razao_social)
+        ? data.projetos.filter((projeto) => projeto.ong_id === ong?.id)
         : data.projetos
 
     return {

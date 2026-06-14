@@ -41,12 +41,12 @@ export default function AplicacoesPage() {
   const [feedback, setFeedback] = useState<Record<number, string>>({})
 
   const openActivities = useMemo(() => {
-    const openProjectNames = new Set(
+    const openProjectIds = new Set(
       state.data.projetos
         .filter((project) => project.status === "aberto" || project.status === "em_andamento")
-        .map((project) => project.nome),
+        .map((project) => project.id),
     )
-    return state.data.atividades.filter((activity) => openProjectNames.has(activity.projeto_nome))
+    return state.data.atividades.filter((activity) => openProjectIds.has(activity.projeto_id))
   }, [state.data.atividades, state.data.projetos])
 
   async function createApplication(event: React.FormEvent<HTMLFormElement>) {
@@ -213,7 +213,11 @@ export default function AplicacoesPage() {
               {state.myAplicacoes.map((aplicacao) => (
                 <TableRow key={aplicacao.id}>
                   {isNgo && <TableCell className="font-medium">{aplicacao.professor_nome}</TableCell>}
-                  <TableCell className={isNgo ? "" : "font-medium"}>{aplicacao.projeto_nome}</TableCell>
+                  <TableCell className={isNgo ? "" : "font-medium"}>
+                    <Link href={`/projetos/${aplicacao.projeto_id}`} className="hover:underline">
+                      {aplicacao.projeto_nome}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{aplicacao.turma_nome}</TableCell>
                   <TableCell className="text-muted-foreground">{aplicacao.atividade_nome}</TableCell>
                   <TableCell className="text-muted-foreground">{formatDate(aplicacao.data_aplicacao)}</TableCell>

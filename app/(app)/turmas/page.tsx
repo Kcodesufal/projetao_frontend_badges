@@ -401,14 +401,42 @@ export default function TurmasPage() {
                     </div>
                   )}
                   {role === "estudante" && (
-                    <Button
-                      className="mt-2 w-full"
-                      variant={currentStatus ? "secondary" : "default"}
-                      disabled={Boolean(currentStatus)}
-                      onClick={() => subscribe(turma.id)}
-                    >
-                      {currentStatus ? "Inscrição enviada" : "Inscrever-se"}
-                    </Button>
+                    currentStatus === "recusado" ? (
+                      <div className="mt-2 flex flex-col gap-2">
+                        <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm">
+                          <span className="text-muted-foreground">Sua inscrição:</span>
+                          <StatusBadge status={currentStatus} />
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => subscribe(turma.id)}
+                        >
+                          Solicitar nova inscrição
+                        </Button>
+                      </div>
+                    ) : currentStatus ? (
+                      <div className="mt-2 flex flex-col gap-2">
+                        <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm">
+                          <span className="text-muted-foreground">Sua inscrição:</span>
+                          <StatusBadge status={currentStatus} />
+                        </div>
+                        <Button asChild size="sm" variant="outline" className="w-full">
+                          <Link href={`/turmas/${turma.id}`}>
+                            <Users className="size-4" />
+                            Ver Turma
+                          </Link>
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        className="mt-2 w-full"
+                        onClick={() => subscribe(turma.id)}
+                      >
+                        Inscrever-se
+                      </Button>
+                    )
                   )}
                 </CardContent>
               </Card>

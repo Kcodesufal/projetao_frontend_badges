@@ -21,12 +21,15 @@ export default function TurmaDetalhePage() {
   const state = useBackendData()
   
   const turma = state.data.turmas.find((item) => item.id === id) || state.myTurmas.find((item) => item.id === id)
-  const [inscricoes, setInscricoes] = useState<any[]>([])
-  const [atividades, setAtividades] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
 
   const isProfessor = role === "professor"
   const isOng = role === "ong"
+  const isEstudante = role === "estudante"
+  const isEnrolled = isEstudante && state.myInscricoes.some((i) => i.turma === id)
+
+  const [inscricoes, setInscricoes] = useState<any[]>([])
+  const [atividades, setAtividades] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!session?.access) return
@@ -164,72 +167,95 @@ export default function TurmaDetalhePage() {
             </Card>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {isOng ? `Equipe da Turma — somente leitura (${inscricoes.length})` : `Alunos Inscritos (${inscricoes.length})`}
-              </CardTitle>
-              {isOng && (
-                <p className="text-xs text-muted-foreground">
-                  Visualização da lista de estudantes inscritos. Apenas o professor pode aprovar ou recusar.
-                </p>
-              )}
-            </CardHeader>
-            <CardContent>
-              {inscricoes.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum aluno inscrito nesta turma ainda.</p>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {inscricoes.map((inscricao) => (
-                    <div key={inscricao.id} className="flex items-center justify-between rounded-lg border p-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium">{inscricao.estudante_nome}</span>
-                        <div className="flex items-center gap-2">
-                          <StatusBadge status={inscricao.status} />
-                          <span className="text-xs text-muted-foreground">
-                            Inscrito em {new Date(inscricao.data_inscricao).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
+          {/* Students only see this card when they are enrolled */}
+          {(!isEstudante || isEnrolled) && (() => {
+            const listaExibida = isEstudante
+              ? inscricoes.filter((i) => i.status === "aceito")
+              : inscricoes
 
-                      {isProfessor && (
-                        <div className="flex items-center gap-2">
-                          {inscricao.status === "pre_aprovado" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="default"
-                                onClick={() => updateStatus(inscricao.id, "aceito")}
-                              >
-                                <Check className="size-4 mr-1" /> Aprovar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => updateStatus(inscricao.id, "recusado")}
-                              >
-                                <X className="size-4 mr-1" /> Recusar
-                              </Button>
-                            </>
-                          )}
-                          {(inscricao.status === "aceito" || inscricao.status === "recusado") && (
-                            <Button
-                              size="icon-sm"
-                              variant="destructive"
-                              onClick={() => deleteInscricao(inscricao.id)}
-                              aria-label="Remover inscrição"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
+            const titulo = isOng
+              ? `Equipe da Turma — somente leitura (${listaExibida.length})`
+              : isEstudante
+                ? `Colegas de Turma (${listaExibida.length} confirmados)`
+                : `Alunos Inscritos (${inscricoes.length})`
+
+            const nota = isOng
+              ? "Visualização da lista de estudantes inscritos. Apenas o professor pode aprovar ou recusar."
+              : isEstudante
+                ? "Apenas estudantes confirmados aparecem aqui."
+                : null
+
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{titulo}</CardTitle>
+                  {nota && (
+                    <p className="text-xs text-muted-foreground">{nota}</p>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  {listaExibida.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      {isEstudante
+                        ? "Nenhum colega confirmado ainda."
+                        : "Nenhum aluno inscrito nesta turma ainda."}
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {listaExibida.map((inscricao) => (
+                        <div key={inscricao.id} className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="flex flex-col gap-1">
+                            <span className="font-medium">{inscricao.estudante_nome}</span>
+                            {!isEstudante && (
+                              <div className="flex items-center gap-2">
+                                <StatusBadge status={inscricao.status} />
+                                <span className="text-xs text-muted-foreground">
+                                  Inscrito em {new Date(inscricao.data_inscricao).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {isProfessor && (
+                            <div className="flex items-center gap-2">
+                              {inscricao.status === "pre_aprovado" && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => updateStatus(inscricao.id, "aceito")}
+                                  >
+                                    <Check className="size-4 mr-1" /> Aprovar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => updateStatus(inscricao.id, "recusado")}
+                                  >
+                                    <X className="size-4 mr-1" /> Recusar
+                                  </Button>
+                                </>
+                              )}
+                              {(inscricao.status === "aceito" || inscricao.status === "recusado") && (
+                                <Button
+                                  size="icon-sm"
+                                  variant="destructive"
+                                  onClick={() => deleteInscricao(inscricao.id)}
+                                  aria-label="Remover inscrição"
+                                >
+                                  <Trash2 className="size-4" />
+                                </Button>
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })()}
         </div>
       </div>
     </div>

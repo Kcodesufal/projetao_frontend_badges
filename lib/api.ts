@@ -93,6 +93,7 @@ export type ProjetoStatus =
 
 export type Projeto = {
   id: number
+  ong_id: number
   ong_nome: string
   nome: string
   descricao: string
@@ -109,6 +110,7 @@ export type Projeto = {
 
 export type Atividade = {
   id: number
+  projeto_id: number
   projeto_nome: string
   nome: string
   descricao: string
@@ -128,6 +130,7 @@ export type Aplicacao = {
   atividade_nome: string
   projeto_nome: string
   projeto_id: number
+  ong_id: number
   justificativa: string
   status: "pendente" | "aceita" | "recusada"
   feedback_ong: string

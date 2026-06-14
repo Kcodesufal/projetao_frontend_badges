@@ -147,8 +147,8 @@ export default function ProjetoDetalhePage() {
   const isOwnOng =
     role === "ong" &&
     profile &&
-    "razao_social" in profile &&
-    project?.ong_nome === profile.razao_social
+    "cnpj" in profile &&
+    project?.ong_id === profile.id
 
   const projectOpen = project?.status === "aberto" || project?.status === "em_andamento"
 
