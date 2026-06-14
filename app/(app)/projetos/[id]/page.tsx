@@ -131,6 +131,18 @@ export default function ProjetoDetalhePage() {
   })
   const [status, setStatus] = useState<ProjetoStatus>("aberto")
   const [equipe, setEquipe] = useState<any[]>([])
+  const [badgeTarget, setBadgeTarget] = useState<{ estudante: number; nome: string; aplicacao: number } | null>(null)
+  const [badgeForm, setBadgeForm] = useState({ tipo: "Liderança", nivel: "I", justificativa: "" })
+
+  const tiposBadge = ["Liderança", "Trabalho em Equipe", "Comunicação", "Organização", "Proatividade", "Impacto Social", "Ensino e Capacitação", "Inovação"] as const
+  const niveisBadge = ["I", "II", "III"] as const
+
+  const equipeByAtividade = equipe.reduce<Record<string, { nome: string; membros: any[] }>>((acc, m) => {
+    const key = String(m.atividade)
+    if (!acc[key]) acc[key] = { nome: m.atividade_nome, membros: [] }
+    acc[key].membros.push(m)
+    return acc
+  }, {})
 
   const isOwnOng =
     role === "ong" &&
@@ -316,6 +328,47 @@ export default function ProjetoDetalhePage() {
         title: "Não foi possível atualizar o projeto",
         description: err instanceof Error ? err.message : "Tente novamente.",
       })
+    }
+  }
+
+  async function removerEstudante(aplicacaoId: number, estudanteId: number, nome: string) {
+    if (!session?.access) return
+    const ok = window.confirm(`Remover ${nome} desta atividade? A inscrição dele na turma acadêmica será mantida.`)
+    if (!ok) return
+    try {
+      await apiFetch(`/aplicacoes/${aplicacaoId}/rejeitar-estudante/`, {
+        method: "POST",
+        token: session.access,
+        body: JSON.stringify({ estudante_id: estudanteId }),
+      })
+      notify({ kind: "success", title: "Estudante removido da atividade" })
+      // Recarregar equipe
+      apiFetch<any[]>(`/projetos/${id}/equipe/`, { token: session.access }).then(setEquipe)
+    } catch (err) {
+      notify({ kind: "error", title: "Não foi possível remover o estudante", description: err instanceof Error ? err.message : "Tente novamente." })
+    }
+  }
+
+  async function emitirBadge(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!session?.access || !badgeTarget) return
+    try {
+      await apiFetch("/badges/", {
+        method: "POST",
+        token: session.access,
+        body: JSON.stringify({
+          estudante: badgeTarget.estudante,
+          tipo: badgeForm.tipo,
+          nivel: badgeForm.nivel,
+          descricao: badgeForm.tipo,
+          justificativa: badgeForm.justificativa,
+        }),
+      })
+      notify({ kind: "success", title: `Badge emitido para ${badgeTarget.nome}!` })
+      setBadgeTarget(null)
+      setBadgeForm({ tipo: "Liderança", nivel: "I", justificativa: "" })
+    } catch (err) {
+      notify({ kind: "error", title: "Não foi possível emitir o badge", description: err instanceof Error ? err.message : "Tente novamente." })
     }
   }
 
@@ -692,15 +745,101 @@ export default function ProjetoDetalhePage() {
                   Equipe Alocada
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                {equipe.map((membro) => (
-                  <div key={membro.id} className="flex flex-col border-b border-border pb-2 last:border-0 last:pb-0">
-                    <span className="text-sm font-medium">{membro.estudante_nome}</span>
-                    <span className="text-xs text-muted-foreground">{membro.turma_nome}</span>
+              <CardContent className="flex flex-col gap-5">
+                {Object.entries(equipeByAtividade).map(([ativId, grupo]) => (
+                  <div key={ativId} className="flex flex-col gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{grupo.nome}</p>
+                    {grupo.membros.map((membro) => (
+                      <div key={membro.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{membro.estudante_nome}</span>
+                          <span className="text-xs text-muted-foreground">{membro.turma_nome} · {membro.universidade_nome}</span>
+                        </div>
+                        {isOwnOng && (
+                          <div className="flex gap-2 shrink-0">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setBadgeTarget({ estudante: membro.estudante, nome: membro.estudante_nome, aplicacao: membro.aplicacao_id })
+                                setBadgeForm({ tipo: "Liderança", nivel: "I", justificativa: "" })
+                              }}
+                            >
+                              🏅 Premiar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => removerEstudante(membro.aplicacao_id, membro.estudante, membro.estudante_nome)}
+                            >
+                              <X className="size-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ))}
               </CardContent>
             </Card>
+          )}
+
+          {/* Badge modal overlay */}
+          {badgeTarget && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+              <Card className="w-full max-w-md animate-fade-up shadow-2xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>🏅 Premiar {badgeTarget.nome}</span>
+                    <Button size="sm" variant="ghost" onClick={() => setBadgeTarget(null)}>
+                      <X className="size-4" />
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form className="flex flex-col gap-4" onSubmit={emitirBadge}>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="badge_tipo">Tipo de Badge</Label>
+                      <select
+                        id="badge_tipo"
+                        value={badgeForm.tipo}
+                        onChange={(e) => setBadgeForm((f) => ({ ...f, tipo: e.target.value }))}
+                        className="h-10 rounded-lg border border-input bg-card px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                        required
+                      >
+                        {tiposBadge.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="badge_nivel">Nível</Label>
+                      <select
+                        id="badge_nivel"
+                        value={badgeForm.nivel}
+                        onChange={(e) => setBadgeForm((f) => ({ ...f, nivel: e.target.value }))}
+                        className="h-10 rounded-lg border border-input bg-card px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                        required
+                      >
+                        {niveisBadge.map((n) => <option key={n} value={n}>Nível {n}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <Label htmlFor="badge_justificativa">Justificativa</Label>
+                      <Textarea
+                        id="badge_justificativa"
+                        value={badgeForm.justificativa}
+                        onChange={(e) => setBadgeForm((f) => ({ ...f, justificativa: e.target.value }))}
+                        placeholder="Descreva o motivo do badge..."
+                        required
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setBadgeTarget(null)}>Cancelar</Button>
+                      <Button type="submit">Emitir Badge</Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {role === "professor" && (

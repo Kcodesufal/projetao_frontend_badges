@@ -22,6 +22,7 @@ export default function TurmaDetalhePage() {
   
   const turma = state.data.turmas.find((item) => item.id === id) || state.myTurmas.find((item) => item.id === id)
   const [inscricoes, setInscricoes] = useState<any[]>([])
+  const [atividades, setAtividades] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const isProfessor = role === "professor"
@@ -29,11 +30,15 @@ export default function TurmaDetalhePage() {
   useEffect(() => {
     if (!session?.access) return
     
-    apiFetch<any[]>(`/turmas/${id}/inscricoes/`, { token: session.access })
-      .then((data) => {
-        setInscricoes(data)
+    Promise.all([
+      apiFetch<any[]>(`/turmas/${id}/inscricoes/`, { token: session.access }),
+      apiFetch<any[]>(`/turmas/${id}/atividades/`, { token: session.access })
+    ])
+      .then(([inscData, ativData]) => {
+        setInscricoes(inscData)
+        setAtividades(ativData)
       })
-      .catch((err) => console.error("Could not fetch inscricoes", err))
+      .catch((err) => console.error("Could not fetch data", err))
       .finally(() => setLoading(false))
   }, [id, session?.access])
 
@@ -115,7 +120,7 @@ export default function TurmaDetalhePage() {
               <h1 className="mt-4 text-balance font-heading text-xl font-bold">
                 {turma.nome}
               </h1>
-              <p className="mt-1 text-muted-foreground">{turma.universidade_detalhes?.nome || turma.universidade}</p>
+              <p className="mt-1 text-muted-foreground">{typeof turma.universidade_detalhes?.nome === "string" ? turma.universidade_detalhes.nome : (typeof turma.universidade?.nome === "string" ? turma.universidade.nome : "")}</p>
               <div className="mt-4">
                 <h2 className="font-heading text-md font-semibold">Descrição</h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -133,6 +138,31 @@ export default function TurmaDetalhePage() {
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-2">
+          {atividades.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Atividades do Projeto ({atividades.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-4">
+                  {atividades.map((ativ) => (
+                    <div key={ativ.aplicacao_id} className="flex flex-col rounded-lg border p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{ativ.atividade_nome}</span>
+                          <span className="text-sm text-muted-foreground">Projeto: {ativ.projeto_nome} ({ativ.ong_nome})</span>
+                        </div>
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/projetos/${ativ.projeto_id}`}>Ver Projeto</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Alunos Inscritos ({inscricoes.length})</CardTitle>

@@ -133,6 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(currentUser)
       setProfile(await fetchProfile(current, currentUser))
     } catch {
+      setSessionState(null)
+      storeSession(null)
       setUser(null)
       setProfile(null)
     }

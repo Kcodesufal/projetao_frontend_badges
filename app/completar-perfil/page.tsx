@@ -77,7 +77,27 @@ function CompletarPerfilContent() {
   }, [role])
 
   function update(key: string, value: string) {
-    setForm((current) => ({ ...current, [key]: value }))
+    let formatted = value
+    if (key === "cpf") {
+      formatted = value.replace(/\D/g, "")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+        .slice(0, 14)
+    } else if (key === "cnpj") {
+      formatted = value.replace(/\D/g, "")
+        .replace(/(\d{2})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1/$2")
+        .replace(/(\d{4})(\d{1,2})$/, "$1-$2")
+        .slice(0, 18)
+    } else if (key === "telefone") {
+      formatted = value.replace(/\D/g, "")
+        .replace(/(\d{2})(\d)/, "($1) $2")
+        .replace(/(\d{4,5})(\d{4})$/, "$1-$2")
+        .slice(0, 15)
+    }
+    setForm((current) => ({ ...current, [key]: formatted }))
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -142,6 +162,8 @@ function CompletarPerfilContent() {
                 value={form.cnpj}
                 onChange={(event) => update("cnpj", event.target.value)}
                 placeholder="00.000.000/0000-00"
+                minLength={18}
+                maxLength={18}
                 required
               />
             </div>
@@ -180,6 +202,8 @@ function CompletarPerfilContent() {
                   value={form.cpf}
                   onChange={(event) => update("cpf", event.target.value)}
                   placeholder="000.000.000-00"
+                  minLength={14}
+                  maxLength={14}
                   required
                 />
               </div>
