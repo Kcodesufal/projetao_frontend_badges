@@ -165,40 +165,15 @@ export function PerfilContent() {
                 <CardTitle>Badges Conquistadas</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                {[
-                  {
-                    id: 1,
-                    tipo: 'Liderança',
-                    nivel: 'II',
-                    descricao: 'Demonstrou excelente capacidade de coordenação.',
-                    justificativa: 'Coordenou a equipe de 10 voluntários durante a campanha de agasalhos, garantindo que as metas fossem superadas.',
-                    data_emissao: '2026-06-10',
-                    emissor_nome: 'ONG Aquece Corações',
-                    emissor_tipo: 'ONG'
-                  },
-                  {
-                    id: 2,
-                    tipo: 'Impacto Social',
-                    nivel: 'I',
-                    descricao: 'Gerou impacto significativo na comunidade local.',
-                    justificativa: 'Participou ativamente do projeto de alfabetização de adultos na comunidade.',
-                    data_emissao: '2026-05-15',
-                    emissor_nome: 'Instituto Educar',
-                    emissor_tipo: 'ONG'
-                  },
-                  {
-                    id: 3,
-                    tipo: 'Proatividade',
-                    nivel: 'III',
-                    descricao: 'Sempre disposto a ajudar além do esperado.',
-                    justificativa: 'Sugeriu e implementou um novo sistema de triagem de doações que otimizou o processo em 30%.',
-                    data_emissao: '2026-03-20',
-                    emissor_nome: 'Prof. Carlos Almeida',
-                    emissor_tipo: 'Professor'
-                  }
-                ].map((badge) => (
-                  <BadgeCard key={badge.id} badge={badge} />
-                ))}
+                {state.data.badges.length ? (
+                  state.data.badges.map((badge) => (
+                    <BadgeCard key={badge.id} badge={badge} />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Você ainda não possui badges conquistadas.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

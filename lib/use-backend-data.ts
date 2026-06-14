@@ -13,6 +13,7 @@ import {
   type Turma,
   type Universidade,
   type Inscricao,
+  type Badge,
 } from "@/lib/api"
 import { useAuth } from "@/components/auth-provider"
 
@@ -27,6 +28,7 @@ const emptySnapshot: BackendSnapshot = {
   professores: [],
   ongs: [],
   universidades: [],
+  badges: [],
 }
 
 export function useBackendData() {
@@ -55,6 +57,7 @@ export function useBackendData() {
         professores,
         ongs,
         universidades,
+        badges,
       ] = await Promise.all([
         apiFetch<Projeto[]>("/projetos/", { token: session.access }),
         apiFetch<Atividade[]>("/atividades/", { token: session.access }),
@@ -65,6 +68,7 @@ export function useBackendData() {
         apiFetch<Professor[]>("/professores/", { token: session.access }),
         apiFetch<Ong[]>("/ongs/", { token: session.access }),
         apiFetch<Universidade[]>("/professores/universidades/", { token: session.access }),
+        apiFetch<Badge[]>("/badges/", { token: session.access }),
       ])
 
       let minhasTurmas: Turma[] = []
@@ -89,6 +93,7 @@ export function useBackendData() {
         professores,
         ongs,
         universidades,
+        badges,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível carregar os dados.")

@@ -154,6 +154,18 @@ export type Level =
   | "grao_mestre"
   | "desafiante"
 
+export type Badge = {
+  id: number
+  estudante: number
+  tipo: string
+  nivel: string
+  descricao: string
+  justificativa: string
+  data_emissao: string
+  emissor_nome: string
+  emissor_tipo: string
+}
+
 export type BackendSnapshot = {
   projetos: Projeto[]
   atividades: Atividade[]
@@ -165,6 +177,7 @@ export type BackendSnapshot = {
   professores: Professor[]
   ongs: Ong[]
   universidades: Universidade[]
+  badges: Badge[]
 }
 
 export class ApiError extends Error {
