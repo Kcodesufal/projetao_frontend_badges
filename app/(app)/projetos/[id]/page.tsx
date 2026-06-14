@@ -16,6 +16,7 @@ import {
   Save,
   SendHorizontal,
   Trash2,
+  RefreshCw,
   Users,
   X,
 } from "lucide-react"
@@ -739,11 +740,25 @@ export default function ProjetoDetalhePage() {
 
           {equipe.length > 0 && (
             <Card>
-              <CardHeader>
+              <CardHeader className="flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Users className="size-5 text-primary" />
                   Equipe Alocada
                 </CardTitle>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => {
+                    if (session?.access) {
+                      apiFetch<any[]>(`/projetos/${id}/equipe/`, { token: session.access })
+                        .then(setEquipe)
+                        .catch(err => notify({ kind: "error", title: "Erro ao recarregar equipe" }))
+                    }
+                  }}
+                  title="Atualizar lista"
+                >
+                  <RefreshCw className="size-4" />
+                </Button>
               </CardHeader>
               <CardContent className="flex flex-col gap-5">
                 {Object.entries(equipeByAtividade).map(([ativId, grupo]) => (

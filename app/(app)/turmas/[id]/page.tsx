@@ -58,6 +58,7 @@ export default function TurmaDetalhePage() {
       setInscricoes((current) =>
         current.map((i) => (i.id === inscricaoId ? { ...i, status } : i))
       )
+      await state.reload()
     } catch (err) {
       notify({
         kind: "error",
@@ -78,6 +79,7 @@ export default function TurmaDetalhePage() {
       })
       notify({ kind: "success", title: "Inscrição removida" })
       setInscricoes((current) => current.filter((i) => i.id !== inscricaoId))
+      await state.reload()
     } catch (err) {
       notify({
         kind: "error",
