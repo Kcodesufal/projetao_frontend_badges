@@ -416,23 +416,23 @@ export function calculateGamification(
   const acceptedTurmas = new Set(
     snapshot.inscricoes
       .filter((inscricao) => inscricao.estudante === estudante.id && inscricao.status === "aceito")
-      .map((inscricao) => inscricao.turma_nome),
+      .map((inscricao) => inscricao.turma),
   )
   const concludedProjects = new Set(
     snapshot.projetos
       .filter((projeto) => projeto.status === "concluido")
-      .map((projeto) => projeto.nome),
+      .map((projeto) => projeto.id),
   )
-  const matchedProjects = new Map<string, string>()
+  const matchedProjects = new Map<number, string>()
 
   snapshot.aplicacoes
     .filter((aplicacao) => aplicacao.status === "aceita")
     .forEach((aplicacao) => {
       if (
-        acceptedTurmas.has(aplicacao.turma_nome) &&
-        concludedProjects.has(aplicacao.projeto_nome)
+        acceptedTurmas.has(aplicacao.turma_id) &&
+        concludedProjects.has(aplicacao.projeto_id)
       ) {
-        matchedProjects.set(aplicacao.projeto_nome, aplicacao.data_atualizacao)
+        matchedProjects.set(aplicacao.projeto_id, aplicacao.data_atualizacao)
       }
     })
 
@@ -440,13 +440,15 @@ export function calculateGamification(
   const level = getLevel(projetosConcluidos)
   const next = getNextLevel(projetosConcluidos)
 
+  const projectMap = new Map(snapshot.projetos.map((p) => [p.id, p.nome]))
+
   return {
     level,
     projetosConcluidos,
     metaProximoNivel: next.target,
     proximoNivel: next.next,
-    historico: Array.from(matchedProjects.entries()).map(([projeto, data]) => ({
-      projeto,
+    historico: Array.from(matchedProjects.entries()).map(([projetoId, data]) => ({
+      projeto: projectMap.get(projetoId) ?? `Projeto #${projetoId}`,
       data,
     })),
   }
