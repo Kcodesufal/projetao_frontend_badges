@@ -26,6 +26,7 @@ export default function TurmaDetalhePage() {
   const [loading, setLoading] = useState(true)
 
   const isProfessor = role === "professor"
+  const isOng = role === "ong"
 
   useEffect(() => {
     if (!session?.access) return
@@ -165,7 +166,14 @@ export default function TurmaDetalhePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Alunos Inscritos ({inscricoes.length})</CardTitle>
+              <CardTitle>
+                {isOng ? `Equipe da Turma — somente leitura (${inscricoes.length})` : `Alunos Inscritos (${inscricoes.length})`}
+              </CardTitle>
+              {isOng && (
+                <p className="text-xs text-muted-foreground">
+                  Visualização da lista de estudantes inscritos. Apenas o professor pode aprovar ou recusar.
+                </p>
+              )}
             </CardHeader>
             <CardContent>
               {inscricoes.length === 0 ? (
@@ -183,7 +191,7 @@ export default function TurmaDetalhePage() {
                           </span>
                         </div>
                       </div>
-                      
+
                       {isProfessor && (
                         <div className="flex items-center gap-2">
                           {inscricao.status === "pre_aprovado" && (

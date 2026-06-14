@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Plus, SendHorizontal, Trash2, X } from "lucide-react"
+import Link from "next/link"
+import { Plus, SendHorizontal, Trash2, Users, X } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { EmptyState } from "@/components/empty-state"
 import { PageHeader } from "@/components/page-header"
@@ -219,6 +220,12 @@ export default function AplicacoesPage() {
                   <TableCell className="min-w-72 text-right">
                     {isNgo && aplicacao.status === "pendente" ? (
                       <div className="flex flex-col items-end gap-2">
+                        <Button asChild size="sm" variant="ghost" className="self-end">
+                          <Link href={`/turmas/${aplicacao.turma_id}`} target="_blank">
+                            <Users className="size-4" />
+                            Ver Alunos
+                          </Link>
+                        </Button>
                         <input
                           value={feedback[aplicacao.id] ?? ""}
                           onChange={(event) => setFeedback((current) => ({ ...current, [aplicacao.id]: event.target.value }))}
