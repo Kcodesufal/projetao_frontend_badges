@@ -363,6 +363,7 @@ export default function ProjetoDetalhePage() {
           nivel: badgeForm.nivel,
           descricao: badgeForm.tipo,
           justificativa: badgeForm.justificativa,
+          aplicacao: badgeTarget.aplicacao,
         }),
       })
       notify({ kind: "success", title: `Badge emitido para ${badgeTarget.nome}!` })
