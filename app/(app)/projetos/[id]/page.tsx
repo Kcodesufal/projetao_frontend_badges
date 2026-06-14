@@ -130,6 +130,7 @@ export default function ProjetoDetalhePage() {
     justificativa: "",
   })
   const [status, setStatus] = useState<ProjetoStatus>("aberto")
+  const [equipe, setEquipe] = useState<any[]>([])
 
   const isOwnOng =
     role === "ong" &&
@@ -143,7 +144,13 @@ export default function ProjetoDetalhePage() {
     if (!project) return
     setStatus(project.status)
     setProjectForm(projectToForm(project))
-  }, [project])
+
+    if (session?.access) {
+      apiFetch<any[]>(`/projetos/${id}/equipe/`, { token: session.access })
+        .then((data) => setEquipe(data))
+        .catch((err) => console.error("Could not fetch equipe", err))
+    }
+  }, [project, session?.access, id])
 
   function updateActivity(key: keyof typeof activityForm, value: string) {
     setActivityForm((current) => ({ ...current, [key]: value }))
@@ -676,6 +683,25 @@ export default function ProjetoDetalhePage() {
               <Info icon={ListChecks} label="Atividades" value={String(atividades.length)} />
             </CardContent>
           </Card>
+
+          {equipe.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="size-5 text-primary" />
+                  Equipe Alocada
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                {equipe.map((membro) => (
+                  <div key={membro.id} className="flex flex-col border-b border-border pb-2 last:border-0 last:pb-0">
+                    <span className="text-sm font-medium">{membro.estudante_nome}</span>
+                    <span className="text-xs text-muted-foreground">{membro.turma_nome}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {role === "professor" && (
             <Card>

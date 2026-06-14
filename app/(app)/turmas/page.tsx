@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { GraduationCap, Pencil, Plus, Save, Search, Trash2, Users, X } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
@@ -380,7 +381,12 @@ export default function TurmasPage() {
                     </form>
                   )}
                   {role === "professor" && (
-                    <div className="grid gap-2 sm:grid-cols-3">
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                      <Button asChild size="sm" variant="default">
+                        <Link href={`/turmas/${turma.id}`}>
+                          Ver Alunos
+                        </Link>
+                      </Button>
                       <Button size="sm" variant={editing ? "secondary" : "outline"} onClick={() => (editing ? setEditingTurmaId(null) : startEditTurma(turma))}>
                         {editing ? <X className="size-4" /> : <Pencil className="size-4" />}
                         {editing ? "Fechar" : "Editar"}
