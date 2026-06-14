@@ -117,10 +117,12 @@ export default function InscricoesPage() {
                       ) : isStudent ? (
                         <div className="flex items-center justify-end gap-2">
                           <StatusBadge status={inscricao.status} />
-                          <Button size="sm" variant="destructive" onClick={() => deleteInscricao(inscricao.id)}>
-                            <Trash2 className="size-4" />
-                            Cancelar
-                          </Button>
+                          {inscricao.status !== "aceito" && (
+                            <Button size="sm" variant="destructive" onClick={() => deleteInscricao(inscricao.id)}>
+                              <Trash2 className="size-4" />
+                              Cancelar
+                            </Button>
+                          )}
                         </div>
                       ) : (
                         <StatusBadge status={inscricao.status} />
@@ -152,7 +154,7 @@ export default function InscricoesPage() {
                     </Button>
                   </div>
                 )}
-                {isStudent && (
+                {isStudent && inscricao.status !== "aceito" && (
                   <Button className="mt-3 w-full" size="sm" variant="destructive" onClick={() => deleteInscricao(inscricao.id)}>
                     <Trash2 className="size-4" />
                     Cancelar inscrição
