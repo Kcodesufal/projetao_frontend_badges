@@ -116,9 +116,45 @@ export default function ProjetoDetalhePage() {
   const state = useBackendData()
   const project = state.data.projetos.find((item) => item.id === id)
   const atividades = useMemo(
-    () => state.data.atividades.filter((atividade) => atividade.projeto_nome === project?.nome),
-    [project?.nome, state.data.atividades],
+    () => state.data.atividades.filter((atividade) => atividade.projeto_id === id),
+    [id, state.data.atividades],
   )
+
+  // Aplicações aceitas deste projeto
+  const aplicacoesAceitas = useMemo(
+    () => state.myAplicacoes.filter((a) => a.projeto_id === id && a.status === "aceita"),
+    [id, state.myAplicacoes],
+  )
+
+  // Turmas participantes: agrupa aplicações aceitas por turma_id
+  const turmasByProject = useMemo(() => {
+    const map = new Map<number, { turma_id: number; turma_nome: string; professor_nome: string; atividades: string[] }>()
+    aplicacoesAceitas.forEach((a) => {
+      if (!map.has(a.turma_id)) {
+        map.set(a.turma_id, {
+          turma_id: a.turma_id,
+          turma_nome: a.turma_nome,
+          professor_nome: a.professor_nome,
+          atividades: [],
+        })
+      }
+      map.get(a.turma_id)!.atividades.push(a.atividade_nome)
+    })
+    return Array.from(map.values())
+  }, [aplicacoesAceitas])
+
+  // Vagas de atividades ocupadas por atividade_id
+  const vagasOcupadasPorAtividade = useMemo(() => {
+    const map = new Map<number, number>()
+    aplicacoesAceitas.forEach((a) => {
+      const atividadeId = a.atividade
+      map.set(atividadeId, (map.get(atividadeId) ?? 0) + 1)
+    })
+    return map
+  }, [aplicacoesAceitas])
+
+  // Vagas de turmas únicas aceitas no projeto
+  const turmasAceitas = useMemo(() => new Set(aplicacoesAceitas.map((a) => a.turma_id)).size, [aplicacoesAceitas])
   const [creatingActivity, setCreatingActivity] = useState(false)
   const [editingProject, setEditingProject] = useState(false)
   const [editingActivityId, setEditingActivityId] = useState<number | null>(null)
@@ -702,7 +738,16 @@ export default function ProjetoDetalhePage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <Badge variant="secondary">{atividade.vagas} vagas</Badge>
+                      {(() => {
+                        const ocupadas = vagasOcupadasPorAtividade.get(atividade.id) ?? 0
+                        const total = atividade.vagas
+                        const cheio = ocupadas >= total
+                        return (
+                          <Badge variant={cheio ? "destructive" : "secondary"}>
+                            {ocupadas}/{total} vagas
+                          </Badge>
+                        )
+                      })()}
                       {isOwnOng && (
                         <div className="flex gap-1">
                           <Button size="icon-sm" variant="ghost" onClick={() => startEditActivity(atividade)} aria-label="Editar atividade">
@@ -732,7 +777,7 @@ export default function ProjetoDetalhePage() {
               <CardTitle>Resumo</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <Info icon={Users} label="Vagas para turmas" value={String(project.vagas_turmas)} />
+              <Info icon={Users} label="Vagas para turmas" value={`${turmasAceitas} / ${project.vagas_turmas} ocupadas`} />
               <Info icon={Clock3} label="Carga horária" value={`${project.carga_horaria}h`} />
               <Info icon={CalendarDays} label="Período" value={`${formatDate(project.data_inicio)} - ${formatDate(project.data_fim)}`} />
               <Info icon={ListChecks} label="Atividades" value={String(atividades.length)} />
@@ -794,6 +839,35 @@ export default function ProjetoDetalhePage() {
                         )}
                       </div>
                     ))}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Turmas Participantes — visível para a ONG dona do projeto */}
+          {isOwnOng && turmasByProject.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="size-5 text-primary" />
+                  Turmas Participantes
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                {turmasByProject.map((turma) => (
+                  <div key={turma.turma_id} className="rounded-lg border border-border p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium text-sm">{turma.turma_nome}</p>
+                        <p className="text-xs text-muted-foreground">{turma.professor_nome}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {turma.atividades.map((a, i) => (
+                        <Badge key={i} variant="secondary" className="text-xs">{a}</Badge>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </CardContent>

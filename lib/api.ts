@@ -124,13 +124,17 @@ export type Atividade = {
 
 export type Aplicacao = {
   id: number
+  professor: number
   professor_nome: string
+  turma: number
   turma_id: number
   turma_nome: string
+  atividade: number
   atividade_nome: string
   projeto_nome: string
   projeto_id: number
   ong_id: number
+  ong_nome: string
   justificativa: string
   status: "pendente" | "aceita" | "recusada"
   feedback_ong: string
